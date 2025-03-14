@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام حجز المواعيد</title>
+    <link rel="stylesheet" href="health.png" srs="health.png">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #FAFAFA;
+            text-align: center;
+        }
+        .navbar {
+            background-color:  #00796B;
+            padding: 15px 30px;
+            color:  #00796B;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        
+        
+        .appointment-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 30px auto;
+            max-width: 800px;
+            width: 90%;
+            display: inline-block;
+        }
+        
+        .appointment-item {
+            background-color: #F5F5F5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+           /* animation: moveLine 5s linear infinite;*/
+        }
+        
+        .appointment-item:hover {
+            background-color:  #70b98f;
+        }
+        .appointment-item.taken {
+            background-color: #ffcdce;
+            cursor: not-allowed;
+        }
+        img {
+            /*border-radius: 3;*/
+            height: 39px;
+            width: 39px;
+            filter: invert(1); 
+
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="html.html">الرئيسية</a>
+        <a href="doctorr.html">عن الطبيب</a>
+        <a href="h.html">حجز موعد</a>
+    </div>
+    <h2>المواعيد المتاحة</h2>
+    <div class="appointment-container" id="appointment-list"></div>
+    <button id="doctor-login-btn" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color:  #00796B;
+    color: white;
+    border: none;
+    font-size: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+">
+    <img src="imeg/health.png" alt="">
+</button>
+    
+
+    <script>
+        document.getElementById("doctor-login-btn").onclick = function() {
+            
+            window.location.href = "fk.html";
+            
+        };
+    </script>
+    <script type="module">
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getDatabase, ref, push, get, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHwQFl7",
+            authDomain: "apppp-e6d3b.firebaseapp.com",
+            projectId: "apppp-e6d3b",
+            storageBucket: "apppp-e6d3b.appspot.com",
+            messagingSenderId: "606593845407",
+            appId: "1:606593845407:web:221d65637d40c3d94a7aaa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        function getTodayDate() {
+            let today = new Date();
+            return today.toISOString().split('T')[0];
+        }
+        function getTomorrowDate() {
+            let tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            return tomorrow.toISOString().split('T')[0];
+        }
+
+
+        var appointments = [
+            { time: "10:24", date: getTodayDate() },
+            { time: "11:00", date: getTodayDate() },
+            { time: "12:10", date: getTodayDate() },
+            { time: "13:08", date: getTodayDate() },
+            { time: "14:12", date: getTodayDate() },
+            { time: "15:22", date: getTodayDate() },
+        ////||||||||||||||||||||||||||||||||||||||||////
+
+            { time: "10:24", date: getTomorrowDate() },
+            { time: "11:00", date: getTomorrowDate() },
+            { time: "12:10", date: getTomorrowDate() },
+            { time: "13:08", date: getTomorrowDate() },
+            { time: "14:12", date: getTomorrowDate() },
+            { time: "15:22", date: getTomorrowDate() },
+        ];
+
+        let lastdate = null;
+
+        appointments.forEach(appointment => {
+            if (lastdate && lastdate !== appointment.date) {
+                div.innerHTML += "<hr>";
+            }
+            
+            
+        });
+        function loadAppointments() {
+            const appointmentsRef = ref(database, "appointments");
+            onValue(appointmentsRef, (snapshot) => {
+                const storedAppointments = snapshot.val() || {};
+                const list = document.getElementById("appointment-list");
+                list.innerHTML = "";
+        
+                let lastDate = ""; // لتتبع اليوم السابق
+                
+                appointments.forEach(appointment => {
+                    if (appointment.date < getTodayDate()) return; 
+        
+                    // إذا تغير التاريخ، أضف خطًا فاصلًا <hr> بين اليوم والغد
+                    if (lastDate && lastDate !== appointment.date) {
+                        let separator = document.createElement("hr");
+                        separator.style.width = "100%";
+                        separator.style.margin = "10px 0";
+                        separator.style.background = "#00796B";
+                        separator.style.height = "5px";
+                        separator.style.border = "none";
+                        //separator.style.width = "5000px";
+                        list.appendChild(separator);
+                    }
+        
+                    var isTaken = Object.values(storedAppointments).some(
+                        taken => taken.time === appointment.time && taken.date === appointment.date && taken.age
+                    );
+        
+                    var item = document.createElement("div");
+                    item.className = "appointment-item" + (isTaken ? " taken" : "");
+                    item.textContent = `🕒 ${appointment.time} - 📅 ${appointment.date}`;
+        
+                    if (!isTaken) {
+                        item.onclick = function() {
+                            bookAppointment(appointment.time, appointment.date);
+                        };
+                    }
+        
+                    list.appendChild(item);
+                    lastDate = appointment.date; // تحديث آخر تاريخ مضاف
+                });
+            });
+        }
+        
+        
+
+        function bookAppointment(time, date) {
+            var name = prompt("🔹 أدخل اسمك للحجز:");
+            var phone = prompt("📞 أدخل رقم الهاتف:");
+            var age = prompt("ادخل عرعك:");
+            if (!name || !phone || !age) return;
+
+            const appointmentData = { time, date, bookedBy: name, phone, age, timestamp: Date.now() };
+
+            const appointmentsRef = ref(database, "appointments");
+            push(appointmentsRef, appointmentData).then(() => {
+                alert(`✅ تم حجز الموعد: ${time} - ${date}`);
+                loadAppointments(); // تحديث المواعيد بعد الحجز
+
+                //var subject = "طلب حجز موعد";
+                //var body = `🔹 تفاصيل الموعد:%0A👤 الاسم: ${name} \n 📞 رقم الهاتف: ${phone}\n📅 التاريخ: ${date}\n🕒 الوقت: ${time}`;
+                //var mailtoLink = `mailto:123sagaiai@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                //window.location.href = mailtoLink;
+            });
+        }
+        
+        loadAppointments(); // تحميل المواعيد عند تحميل الصفحة
+    </script>
+</body>
+</html>
